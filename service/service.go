@@ -50,6 +50,70 @@ func (user *UserService) UserSignup(ctx context.Context, req *pb.UserSignupReque
 		Email: res.Email,
 	}, nil
 }
+func (user *UserService) UserLogin(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserSignupResponse, error) {
+	span := Tracer.StartSpan("user login grpc")
+	defer span.Finish()
+
+	client, err := user.Adapter.UserLogin(req.Email)
+	if err != nil {
+		return &pb.UserSignupResponse{}, err
+	}
+	if client.Name == "" {
+		return &pb.UserSignupResponse{}, fmt.Errorf("invalid credentials")
+	}
+	if !helper.CheckPassword(client.Password, req.Password) {
+		return &pb.UserSignupResponse{}, fmt.Errorf("invalid credentials")
+
+	}
+	res := &pb.UserSignupResponse{
+		Id:    uint32(client.Id),
+		Name:  client.Name,
+		Email: client.Email,
+	}
+
+	return res, nil
+
+}
+func (admin *UserService) AdminLogin(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserSignupResponse, error) {
+	span := Tracer.StartSpan("admin login grpc")
+	defer span.Finish()
+	adminData, err := admin.Adapter.AdminLogin(req.Email)
+	if err != nil {
+		return &pb.UserSignupResponse{}, err
+	}
+	if adminData.Name == "" {
+		return &pb.UserSignupResponse{}, fmt.Errorf("invalid credentials")
+	}
+	if !helper.CheckPassword(adminData.Password, req.Password) {
+		return &pb.UserSignupResponse{}, fmt.Errorf("invalid credentials")
+	}
+	res := &pb.UserSignupResponse{
+		Id:    uint32(adminData.Id),
+		Name:  adminData.Name,
+		Email: adminData.Email,
+	}
+	return res, nil
+}
+func (sup *UserService) SuperAdminLogin(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserSignupResponse, error) {
+	span := Tracer.StartSpan("super admin login grpc")
+	defer span.Finish()
+	supData, err := sup.Adapter.SuperAdminLogin(req.Email)
+	if err != nil {
+		return &pb.UserSignupResponse{}, err
+	}
+	if supData.Name == "" {
+		return &pb.UserSignupResponse{}, fmt.Errorf("invalid credentials")
+	}
+	if !helper.CheckPassword(supData.Password, req.Password) {
+		return &pb.UserSignupResponse{}, fmt.Errorf("invalid credentials")
+	}
+	res := &pb.UserSignupResponse{
+		Id:    uint32(supData.Id),
+		Name:  supData.Name,
+		Email: supData.Email,
+	}
+	return res, nil
+}
 
 type HealthChecker struct {
 	grpc_health_v1.UnimplementedHealthServer
