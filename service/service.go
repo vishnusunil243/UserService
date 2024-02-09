@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opentracing/opentracing-go"
 	"github.com/vishnusunil243/UserService/adapters"
 	"github.com/vishnusunil243/UserService/entities"
@@ -111,6 +112,90 @@ func (sup *UserService) SuperAdminLogin(ctx context.Context, req *pb.UserLoginRe
 		Id:    uint32(supData.Id),
 		Name:  supData.Name,
 		Email: supData.Email,
+	}
+	return res, nil
+}
+func (admin *UserService) GetAllUsers(em *empty.Empty, srv pb.UserService_GetAllUsersServer) error {
+	span := Tracer.StartSpan("get all users")
+	defer span.Finish()
+	users, err := admin.Adapter.GetAllUsers()
+	if err != nil {
+		return err
+	}
+	for _, user := range users {
+		if err = srv.Send(&pb.UserSignupResponse{
+			Id:    uint32(user.Id),
+			Name:  user.Name,
+			Email: user.Email,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (sup *UserService) GetAllAdmins(em *empty.Empty, srv pb.UserService_GetAllAdminsServer) error {
+	span := Tracer.StartSpan("get all admins grpc")
+	defer span.Finish()
+	admins, err := sup.Adapter.GetAllAdmins()
+	if err != nil {
+		return err
+	}
+	for _, admin := range admins {
+		fmt.Println(admin)
+		if err = srv.Send(&pb.UserSignupResponse{
+			Id:    uint32(admin.Id),
+			Name:  admin.Name,
+			Email: admin.Email,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (sup *UserService) AddAdmin(ctx context.Context, req *pb.UserSignupRequest) (*pb.UserSignupResponse, error) {
+	span := Tracer.StartSpan("add admin grpc")
+	defer span.Finish()
+	reqEntity := entities.Admin{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: helper.Hash(req.Password),
+	}
+	admin, err := sup.Adapter.AddAdmin(reqEntity)
+	if err != nil {
+		return &pb.UserSignupResponse{}, err
+	}
+	res := &pb.UserSignupResponse{
+		Id:    uint32(admin.Id),
+		Name:  admin.Name,
+		Email: admin.Email,
+	}
+	return res, nil
+}
+func (admin *UserService) GetUser(ctx context.Context, req *pb.GetUserById) (*pb.UserSignupResponse, error) {
+	span := Tracer.StartSpan("get user grpc")
+	defer span.Finish()
+	user, err := admin.Adapter.GetUser(int(req.Id))
+	if err != nil {
+		return &pb.UserSignupResponse{}, err
+	}
+	res := &pb.UserSignupResponse{
+		Id:    uint32(user.Id),
+		Name:  user.Name,
+		Email: user.Email,
+	}
+	return res, nil
+}
+func (sup *UserService) GetAdmin(ctx context.Context, req *pb.GetUserById) (*pb.UserSignupResponse, error) {
+	span := Tracer.StartSpan("get admin grpc")
+	defer span.Finish()
+	admin, err := sup.Adapter.GetAdmin(int(req.Id))
+	if err != nil {
+		return &pb.UserSignupResponse{}, nil
+	}
+	res := &pb.UserSignupResponse{
+		Id:    uint32(admin.Id),
+		Name:  admin.Name,
+		Email: admin.Email,
 	}
 	return res, nil
 }

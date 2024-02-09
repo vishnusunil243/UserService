@@ -36,14 +36,6 @@ func (user *UserAdapter) GetAdmin(id int) (entities.Admin, error) {
 	}
 	return res, nil
 }
-func (user *UserAdapter) GetSuperAdmin(id int) (entities.SuperAdmin, error) {
-	var res entities.SuperAdmin
-	query := `SELECT * FROM super_admins where id=?`
-	if err := user.DB.Raw(query, id).Scan(&res).Error; err != nil {
-		return entities.SuperAdmin{}, err
-	}
-	return res, nil
-}
 func (admin *UserAdapter) AdminLogin(email string) (entities.Admin, error) {
 	var res entities.Admin
 	query := `SELECT * FROM admins WHERE email=?`
@@ -65,6 +57,32 @@ func (sup *UserAdapter) SuperAdminLogin(email string) (entities.SuperAdmin, erro
 	query := `SELECT * FROM super_admins WHERE email=?`
 	if err := sup.DB.Raw(query, email).Scan(&res).Error; err != nil {
 		return entities.SuperAdmin{}, err
+	}
+	return res, nil
+}
+func (sup *UserAdapter) AddAdmin(req entities.Admin) (entities.Admin, error) {
+	var res entities.Admin
+	var lastId int
+	sup.DB.Raw("select MAX(id) FROM admins").Scan(&lastId)
+	query := `INSERT INTO admins (name,email,password,id) VALUES ($1,$2,$3,$4) RETURNING id,name,email`
+	if err := sup.DB.Raw(query, req.Name, req.Email, req.Password, lastId+1).Scan(&res).Error; err != nil {
+		return entities.Admin{}, err
+	}
+	return res, nil
+}
+func (sup *UserAdapter) GetAllAdmins() ([]entities.Admin, error) {
+	var res []entities.Admin
+	query := `SELECT * FROM admins`
+	if err := sup.DB.Raw(query).Scan(&res).Error; err != nil {
+		return []entities.Admin{}, err
+	}
+	return res, nil
+}
+func (admin *UserAdapter) GetAllUsers() ([]entities.User, error) {
+	var res []entities.User
+	query := `SELECT * FROM users`
+	if err := admin.DB.Raw(query).Scan(&res).Error; err != nil {
+		return []entities.User{}, err
 	}
 	return res, nil
 }
