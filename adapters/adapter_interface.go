@@ -12,4 +12,7 @@ type AdapterInterface interface {
 	AddAdmin(req entities.Admin) (entities.Admin, error)
 	GetAllAdmins() ([]entities.Admin, error)
 	GetAllUsers() ([]entities.User, error)
+	AddAddress(req entities.Address) error
+	RemoveAddress(userId int) error
+	GetAddress(userId int) (entities.Address, error)
 }

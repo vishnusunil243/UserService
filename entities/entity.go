@@ -18,3 +18,12 @@ type SuperAdmin struct {
 	Email    string
 	Password string
 }
+type Address struct {
+	Id       uint
+	UserId   uint
+	User     `gorm:"foreignKey:UserId"`
+	City     string
+	District string
+	State    string
+	Road     string
+}

@@ -86,3 +86,25 @@ func (admin *UserAdapter) GetAllUsers() ([]entities.User, error) {
 	}
 	return res, nil
 }
+func (address *UserAdapter) AddAddress(req entities.Address) error {
+	insertQuery := `INSERT INTO addresses (user_id,city,district,state,road) VALUES ($1,$2,$3,$4,$5)`
+	if err := address.DB.Exec(insertQuery, req.UserId, req.City, req.District, req.State, req.Road).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (address *UserAdapter) RemoveAddress(userId int) error {
+	deleteQuery := `DELETE FROM addresses WHERE user_id=?`
+	if err := address.DB.Exec(deleteQuery, userId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (address *UserAdapter) GetAddress(userId int) (entities.Address, error) {
+	sQuery := `SELECT * FROM addresses WHERE user_id=?`
+	var res entities.Address
+	if err := address.DB.Raw(sQuery, userId).Scan(&res).Error; err != nil {
+		return entities.Address{}, err
+	}
+	return res, nil
+}

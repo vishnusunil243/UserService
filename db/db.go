@@ -17,5 +17,6 @@ func InitDB(connectTo string) (*gorm.DB, error) {
 	db.AutoMigrate(&entities.User{})
 	db.AutoMigrate(&entities.Admin{})
 	db.AutoMigrate(&entities.SuperAdmin{})
+	db.AutoMigrate(&entities.Address{})
 	return db, nil
 }

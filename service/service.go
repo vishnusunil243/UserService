@@ -199,6 +199,56 @@ func (sup *UserService) GetAdmin(ctx context.Context, req *pb.GetUserById) (*pb.
 	}
 	return res, nil
 }
+func (address *UserService) AddAddress(ctx context.Context, req *pb.AddAddressRequest) (*pb.GetUserById, error) {
+	addr, err := address.Adapter.GetAddress(int(req.UserId))
+	if addr.Id != 0 {
+		return &pb.GetUserById{}, fmt.Errorf("user already has address please delete the address to add new one")
+	}
+	if err != nil {
+		return &pb.GetUserById{}, err
+	}
+	entity := entities.Address{
+		UserId:   uint(req.UserId),
+		City:     req.City,
+		State:    req.State,
+		District: req.District,
+		Road:     req.Road,
+	}
+	err = address.Adapter.AddAddress(entity)
+	if err != nil {
+		return &pb.GetUserById{}, err
+	}
+	return &pb.GetUserById{Id: req.UserId}, nil
+}
+func (address *UserService) RemoveAddress(ctx context.Context, req *pb.GetUserById) (*pb.GetUserById, error) {
+	addr, err := address.Adapter.GetAddress(int(req.Id))
+	if err != nil {
+		return &pb.GetUserById{}, err
+	}
+	if addr.Id == 0 {
+		return &pb.GetUserById{}, fmt.Errorf("address not found")
+	}
+	err = address.Adapter.RemoveAddress(int(req.Id))
+	if err != nil {
+		return &pb.GetUserById{}, err
+	}
+	return &pb.GetUserById{Id: req.Id}, nil
+}
+func (address *UserService) GetAddress(ctx context.Context, req *pb.GetUserById) (*pb.AddAddressRequest, error) {
+	addr, err := address.Adapter.GetAddress(int(req.Id))
+	if err != nil {
+		return &pb.AddAddressRequest{}, err
+	}
+	res := &pb.AddAddressRequest{
+		UserId:   uint32(addr.UserId),
+		City:     addr.City,
+		State:    addr.State,
+		Road:     addr.Road,
+		District: addr.District,
+	}
+	fmt.Println(res)
+	return res, nil
+}
 
 type HealthChecker struct {
 	grpc_health_v1.UnimplementedHealthServer
