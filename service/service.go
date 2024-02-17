@@ -234,12 +234,13 @@ func (address *UserService) RemoveAddress(ctx context.Context, req *pb.GetUserBy
 	}
 	return &pb.GetUserById{Id: req.Id}, nil
 }
-func (address *UserService) GetAddress(ctx context.Context, req *pb.GetUserById) (*pb.AddAddressRequest, error) {
+func (address *UserService) GetAddress(ctx context.Context, req *pb.GetUserById) (*pb.GetAddressResponse, error) {
 	addr, err := address.Adapter.GetAddress(int(req.Id))
 	if err != nil {
-		return &pb.AddAddressRequest{}, err
+		return &pb.GetAddressResponse{}, err
 	}
-	res := &pb.AddAddressRequest{
+	res := &pb.GetAddressResponse{
+		Id:       uint32(addr.Id),
 		UserId:   uint32(addr.UserId),
 		City:     addr.City,
 		State:    addr.State,
